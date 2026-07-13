@@ -1,0 +1,212 @@
+import { generateId } from "@/lib/utils"
+import { Client, Order, Projet, TeamMember, User } from "@/types"
+
+const now = new Date().toISOString()
+
+export const seedUsers: User[] = [
+  {
+    id: "u-admin",
+    fullName: "Ayoub",
+    email: "elouafiaayoub@gmail.com",
+    password: "admin123",
+    role: "admin",
+    active: true,
+    createdAt: now,
+  },
+  {
+    id: "u-manager",
+    fullName: "Sara Manager",
+    email: "manager@agence.ma",
+    password: "manager123",
+    role: "manager",
+    active: true,
+    createdAt: now,
+  },
+  {
+    id: "u-leader",
+    fullName: "Yassine Chef d'équipe",
+    email: "leader@agence.ma",
+    password: "leader123",
+    role: "team_leader",
+    active: true,
+    createdAt: now,
+  },
+  {
+    id: "u-editor",
+    fullName: "Imane Éditrice",
+    email: "editor@agence.ma",
+    password: "editor123",
+    role: "editor",
+    active: true,
+    createdAt: now,
+  },
+]
+
+export const seedClients: Client[] = [
+  { id: "c-1", name: "Café Atlas", phone: "0600000001", city: "Casablanca", createdAt: now },
+  { id: "c-2", name: "Boutique Zayn", phone: "0600000002", city: "Rabat", createdAt: now },
+  { id: "c-3", name: "FitClub Marrakech", phone: "0600000003", city: "Marrakech", createdAt: now },
+]
+
+export const seedTeamMembers: TeamMember[] = [
+  {
+    id: "t-1",
+    fullName: "Imane Éditrice",
+    email: "editor@agence.ma",
+    function: "editor",
+    paymentType: "freelancer",
+    rate: 150,
+    active: true,
+    createdAt: now,
+  },
+  {
+    id: "t-2",
+    fullName: "Karim Monteur",
+    email: "karim@agence.ma",
+    function: "editor",
+    paymentType: "freelancer",
+    rate: 150,
+    active: true,
+    createdAt: now,
+  },
+  {
+    id: "t-3",
+    fullName: "Nadia Réalisatrice",
+    email: "nadia@agence.ma",
+    function: "filmmaker",
+    paymentType: "salary",
+    rate: 0,
+    monthlySalary: 6000,
+    active: true,
+    createdAt: now,
+  },
+  {
+    id: "t-4",
+    fullName: "Omar Designer",
+    email: "omar@agence.ma",
+    function: "designer",
+    paymentType: "freelancer",
+    rate: 100,
+    active: true,
+    createdAt: now,
+  },
+  {
+    id: "t-5",
+    fullName: "Sara Media Buyer",
+    email: "sara.mb@agence.ma",
+    function: "media_buyer",
+    paymentType: "salary",
+    rate: 0,
+    monthlySalary: 7000,
+    active: true,
+    createdAt: now,
+  },
+]
+
+function inDays(days: number) {
+  const d = new Date()
+  d.setDate(d.getDate() + days)
+  return d.toISOString()
+}
+
+export const seedOrders: Order[] = [
+  {
+    id: generateId("order"),
+    orderNumber: "CMD-0001",
+    clientId: "c-1",
+    clientName: "Café Atlas",
+    phone: "0600000001",
+    city: "Casablanca",
+    projetLabel: "Vidéos UGC produits",
+    numberOfVideos: 3,
+    pricePerVideo: 400,
+    scriptValidated: true,
+    filmmakerId: "t-3",
+    editorId: "t-1",
+    status: "in_editing",
+    maxDeliveryDate: inDays(5),
+    videos: [
+      { id: generateId("vid"), index: 1, status: "in_editing", editorId: "t-1" },
+      { id: generateId("vid"), index: 2, status: "in_filming", editorId: "t-1" },
+      { id: generateId("vid"), index: 3, status: "new_order" },
+    ],
+    createdAt: now,
+    updatedAt: now,
+    createdBy: "u-admin",
+  },
+  {
+    id: generateId("order"),
+    orderNumber: "CMD-0002",
+    clientId: "c-2",
+    clientName: "Boutique Zayn",
+    phone: "0600000002",
+    city: "Rabat",
+    projetLabel: "Vidéo cinématique lancement",
+    numberOfVideos: 1,
+    pricePerVideo: 1200,
+    scriptValidated: false,
+    editorId: "t-2",
+    status: "in_script",
+    maxDeliveryDate: inDays(10),
+    videos: [{ id: generateId("vid"), index: 1, status: "in_script", editorId: "t-2" }],
+    createdAt: now,
+    updatedAt: now,
+    createdBy: "u-admin",
+  },
+  {
+    id: generateId("order"),
+    orderNumber: "CMD-0003",
+    clientId: "c-3",
+    clientName: "FitClub Marrakech",
+    phone: "0600000003",
+    city: "Marrakech",
+    projetLabel: "Pack 5 vidéos réseaux sociaux",
+    numberOfVideos: 5,
+    pricePerVideo: 300,
+    scriptValidated: true,
+    editorId: "t-1",
+    status: "completed",
+    maxDeliveryDate: inDays(-3),
+    videos: Array.from({ length: 5 }).map((_, i) => ({
+      id: generateId("vid"),
+      index: i + 1,
+      status: "completed" as const,
+      editorId: "t-1",
+    })),
+    createdAt: now,
+    updatedAt: now,
+    createdBy: "u-admin",
+  },
+]
+
+export const seedProjets: Projet[] = [
+  {
+    id: generateId("projet"),
+    reference: "PRJ-0001",
+    clientId: "c-2",
+    clientName: "Boutique Zayn",
+    type: "ads",
+    status: "in_progress",
+    mediaBuyerId: "t-5",
+    price: 3500,
+    startDate: now,
+    dueDate: inDays(20),
+    createdAt: now,
+    updatedAt: now,
+    createdBy: "u-admin",
+  },
+  {
+    id: generateId("projet"),
+    reference: "PRJ-0002",
+    clientId: "c-3",
+    clientName: "FitClub Marrakech",
+    type: "community_management",
+    status: "new",
+    price: 2500,
+    startDate: inDays(2),
+    dueDate: inDays(32),
+    createdAt: now,
+    updatedAt: now,
+    createdBy: "u-admin",
+  },
+]
