@@ -148,7 +148,10 @@ export function ProjetFormDialog({ projet, trigger }: ProjetFormDialogProps) {
 
             <div className="space-y-1.5">
               <Label>Type de projet</Label>
-              <SelectNative value={form.type} onChange={(e) => setForm((f) => ({ ...f, type: e.target.value }))}>
+              <SelectNative
+                value={form.type}
+                onChange={(e) => setForm((f) => ({ ...f, type: e.target.value as Projet["type"] }))}
+              >
                 {PROJET_TYPES.map((t) => (
                   <option key={t.value} value={t.value}>
                     {t.label}
@@ -158,7 +161,10 @@ export function ProjetFormDialog({ projet, trigger }: ProjetFormDialogProps) {
             </div>
             <div className="space-y-1.5">
               <Label>Statut</Label>
-              <SelectNative value={form.status} onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}>
+              <SelectNative
+                value={form.status}
+                onChange={(e) => setForm((f) => ({ ...f, status: e.target.value as Projet["status"] }))}
+              >
                 {PROJET_STATUSES.map((s) => (
                   <option key={s.value} value={s.value}>
                     {s.label}

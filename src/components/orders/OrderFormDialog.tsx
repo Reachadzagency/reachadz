@@ -259,7 +259,10 @@ export function OrderFormDialog({ order, trigger }: OrderFormDialogProps) {
             </div>
             <div className="space-y-1.5">
               <Label>Statut</Label>
-              <SelectNative value={form.status} onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}>
+              <SelectNative
+                value={form.status}
+                onChange={(e) => setForm((f) => ({ ...f, status: e.target.value as Order["status"] }))}
+              >
                 {ORDER_STATUSES.map((s) => (
                   <option key={s.value} value={s.value}>
                     {s.label}
