@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom"
 import { ArrowLeft, Send, CheckCircle2 } from "lucide-react"
 import { useOrders } from "@/context/OrdersContext"
-import { useTeam } from "@/context/TeamContext"
+import { useTeam, useMyTeamMember } from "@/context/TeamContext"
 import { useAuth } from "@/context/AuthContext"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -17,6 +17,7 @@ export default function OrderDetailPage() {
   const navigate = useNavigate()
   const { items: orders, updateVideo, update } = useOrders()
   const { active: team } = useTeam()
+  const myTeamMember = useMyTeamMember()
   const { currentUser, can } = useAuth()
 
   const order = orders.find((o) => o.id === id)
@@ -115,7 +116,7 @@ export default function OrderDetailPage() {
         </CardHeader>
         <CardContent className="space-y-3">
           {order.videos.map((video) => {
-            const isMine = video.editorId === currentUser?.id
+            const isMine = !!myTeamMember && video.editorId === myTeamMember.id
             const canSendReview = isEditor && isMine && ["in_script", "in_filming", "in_editing"].includes(video.status)
             return (
               <div key={video.id} className="grid grid-cols-1 gap-3 rounded-lg border p-3 sm:grid-cols-12 sm:items-center">

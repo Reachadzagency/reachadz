@@ -2,7 +2,7 @@ import { useMemo, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Search } from "lucide-react"
 import { useOrders } from "@/context/OrdersContext"
-import { useTeam } from "@/context/TeamContext"
+import { useTeam, useMyTeamMember } from "@/context/TeamContext"
 import { useAuth } from "@/context/AuthContext"
 import { Input } from "@/components/ui/input"
 import { SelectNative } from "@/components/ui/select-native"
@@ -17,6 +17,7 @@ export default function OrdersPage() {
   const { active: orders } = useOrders()
   const { active: team } = useTeam()
   const { currentUser, can } = useAuth()
+  const myTeamMember = useMyTeamMember()
   const navigate = useNavigate()
 
   const [search, setSearch] = useState("")
@@ -32,7 +33,9 @@ export default function OrdersPage() {
   const filtered = useMemo(() => {
     return orders.filter((o) => {
       if (isEditor) {
-        const assigned = o.videos.some((v) => v.editorId === currentUser?.id) || o.editorId === currentUser?.id
+        const assigned =
+          !!myTeamMember &&
+          (o.videos.some((v) => v.editorId === myTeamMember.id) || o.editorId === myTeamMember.id)
         if (!assigned) return false
       }
       if (statusFilter === "active" && ["completed", "cancelled"].includes(o.status)) return false
@@ -49,7 +52,7 @@ export default function OrdersPage() {
       }
       return true
     })
-  }, [orders, isEditor, currentUser, statusFilter, editorFilter, fromDate, toDate, search])
+  }, [orders, isEditor, myTeamMember, statusFilter, editorFilter, fromDate, toDate, search])
 
   return (
     <div className="space-y-4">

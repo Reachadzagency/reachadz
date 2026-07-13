@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react"
+import { Navigate } from "react-router-dom"
 import {
   Wallet,
   Clapperboard,
@@ -88,6 +89,13 @@ export default function DashboardPage() {
         .map((member) => ({ member, busy: isEditorBusy(member.id, activeOrders) })),
     [activeTeam, activeOrders]
   )
+
+  // Editors don't have a "dashboard" in the permission model — send them
+  // straight to their actual work (their assigned orders/videos) instead.
+  // This check comes after all hooks above so hook order stays stable.
+  if (!can("dashboard.view")) {
+    return <Navigate to="/orders" replace />
+  }
 
   return (
     <div className="space-y-6">
