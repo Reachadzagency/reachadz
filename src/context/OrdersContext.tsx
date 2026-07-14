@@ -5,6 +5,7 @@ import { seedOrders } from "@/lib/seedData"
 import { Order, OrderStatus, OrderVideo } from "@/types"
 import { useNotifications } from "@/context/NotificationsContext"
 import { useAuditLog } from "@/context/AuditLogContext"
+import { useTeam } from "@/context/TeamContext"
 
 interface OrdersContextValue extends ReturnType<typeof useEntityStore<Order>> {
   createOrder: (order: Omit<Order, "id" | "createdAt" | "updatedAt">) => Order
@@ -19,21 +20,25 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
   const store = useEntityStore<Order>(STORAGE_KEYS.orders, seedOrders)
   const { notify } = useNotifications()
   const { log } = useAuditLog()
+  const { active: team } = useTeam()
 
   const createOrder = useCallback(
     (order: Omit<Order, "id" | "createdAt" | "updatedAt">) => {
       const now = new Date().toISOString()
       const created = store.add({ ...order, createdAt: now, updatedAt: now } as Order)
+      const assignedEditor = team.find((t) => t.id === created.editorId)
       notify(
         "order_created",
         "Nouvelle commande",
-        `${created.orderNumber} pour ${created.clientName}`,
+        assignedEditor
+          ? `${created.orderNumber} pour ${created.clientName} — envoyée à ${assignedEditor.fullName}`
+          : `${created.orderNumber} pour ${created.clientName}`,
         `/orders/${created.id}`
       )
       log("Création commande", "order", created.id, created.orderNumber)
       return created
     },
-    [store, notify, log]
+    [store, notify, log, team]
   )
 
   const changeStatus = useCallback(
@@ -57,17 +62,29 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
       if (!order) return
       const videos = order.videos.map((v) => (v.id === videoId ? { ...v, ...patch } : v))
       store.update(orderId, { videos, updatedAt: new Date().toISOString() } as Partial<Order>)
+      const updatedVideo = videos.find((v) => v.id === videoId)
       if (patch.status === "revision") {
         notify(
           "delivery_submitted",
           "Vidéo envoyée en révision",
-          `${order.orderNumber} — vidéo #${videos.find((v) => v.id === videoId)?.index}`,
+          `${order.orderNumber} — vidéo #${updatedVideo?.index}`,
           `/orders/${orderId}`
         )
       }
+      if (patch.editorId !== undefined && patch.editorId !== "") {
+        const assignedEditor = team.find((t) => t.id === patch.editorId)
+        if (assignedEditor) {
+          notify(
+            "order_status_changed",
+            "Vidéo envoyée à un éditeur",
+            `${order.orderNumber} — vidéo #${updatedVideo?.index} envoyée à ${assignedEditor.fullName}`,
+            `/orders/${orderId}`
+          )
+        }
+      }
       log("Mise à jour vidéo", "order_video", videoId, JSON.stringify(patch))
     },
-    [store, notify, log]
+    [store, notify, log, team]
   )
 
   const nextOrderNumber = useCallback(() => {

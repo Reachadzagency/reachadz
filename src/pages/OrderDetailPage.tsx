@@ -1,8 +1,10 @@
+import { useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
-import { ArrowLeft, Send, CheckCircle2 } from "lucide-react"
+import { ArrowLeft, Send, CheckCircle2, Link2 } from "lucide-react"
 import { useOrders } from "@/context/OrdersContext"
 import { useTeam, useMyTeamMember } from "@/context/TeamContext"
 import { useAuth } from "@/context/AuthContext"
+import { useNotifications } from "@/context/NotificationsContext"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -12,6 +14,50 @@ import { OrderFormDialog } from "@/components/orders/OrderFormDialog"
 import { formatDate, formatMAD } from "@/lib/utils"
 import { ORDER_STATUSES } from "@/types"
 
+function DeliveryLinkField({
+  orderId,
+  videoId,
+  index,
+  initialValue,
+  onSaved,
+}: {
+  orderId: string
+  videoId: string
+  index: number
+  initialValue: string
+  onSaved: (link: string) => void
+}) {
+  const [value, setValue] = useState(initialValue)
+  const [justSaved, setJustSaved] = useState(false)
+  const dirty = value.trim() !== (initialValue ?? "").trim()
+
+  function handleSend() {
+    if (!value.trim()) return
+    onSaved(value.trim())
+    setJustSaved(true)
+    setTimeout(() => setJustSaved(false), 2500)
+  }
+
+  return (
+    <div className="flex items-center gap-1.5">
+      <Input
+        placeholder={`Lien de livraison vidéo #${index} (Drive, WeTransfer...)`}
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault()
+            handleSend()
+          }
+        }}
+      />
+      <Button size="sm" variant={dirty ? "default" : "outline"} disabled={!value.trim() || !dirty} onClick={handleSend}>
+        <Link2 className="h-3.5 w-3.5" /> {justSaved ? "Envoyé ✓" : "Envoyer"}
+      </Button>
+    </div>
+  )
+}
+
 export default function OrderDetailPage() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -19,6 +65,7 @@ export default function OrderDetailPage() {
   const { active: team } = useTeam()
   const myTeamMember = useMyTeamMember()
   const { currentUser, can } = useAuth()
+  const { notify } = useNotifications()
 
   const order = orders.find((o) => o.id === id)
   const showPrices = can("dashboard.viewFinancials")
@@ -158,10 +205,20 @@ export default function OrderDetailPage() {
                 </div>
 
                 <div className="sm:col-span-4">
-                  <Input
-                    placeholder="Lien de livraison (Drive, WeTransfer...)"
-                    defaultValue={video.deliveryLink ?? ""}
-                    onBlur={(e) => updateVideo(order.id, video.id, { deliveryLink: e.target.value })}
+                  <DeliveryLinkField
+                    orderId={order.id}
+                    videoId={video.id}
+                    index={video.index}
+                    initialValue={video.deliveryLink ?? ""}
+                    onSaved={(link) => {
+                      updateVideo(order.id, video.id, { deliveryLink: link })
+                      notify(
+                        "delivery_submitted",
+                        "Lien de livraison envoyé",
+                        `${order.orderNumber} — vidéo #${video.index} par ${currentUser?.fullName ?? "un éditeur"}`,
+                        `/orders/${order.id}`
+                      )
+                    }}
                   />
                 </div>
 
